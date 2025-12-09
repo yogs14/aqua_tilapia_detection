@@ -63,7 +63,7 @@ class VideoProcessor:
     def _process_frame(self, frame):
         now = time.time()
         # Mendapatkan hasil deteksi dari YOLO
-        results = self.model(frame, device="cpu", verbose=False, imgsz=480)[0]
+        results = self.model(frame, device=0, verbose=False, imgsz=480, conf=0.1)[0]
 
         # --- PERUBAHAN UTAMA DI SINI ---
         # Tidak perlu lagi loop manual "for box in results.boxes"

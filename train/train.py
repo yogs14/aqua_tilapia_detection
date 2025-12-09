@@ -20,7 +20,9 @@ def train_model(data_yaml_path, model_name='yolo11s.pt', epochs=200, imgsz=640, 
         imgsz=imgsz,
         batch=batch,
         name=project_name,
-        patience=patience
+        patience=patience,
+        device=0,
+        workers=4
     )
     return results
 
