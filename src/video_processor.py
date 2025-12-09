@@ -2,18 +2,29 @@ import cv2
 import time
 import numpy as np
 from ultralytics import YOLO
-from sort import Sort
+from bytetrack import ByteTracker  # <-- Menggunakan module baru
 from utils import get_distance
 import csv
 import os
 
 
 class VideoProcessor:
-    def __init__(self, model_path, video_path, csv_output_path, max_age=5, min_hits=2, iou_threshold=0.2, skip_frame=5, track_time_window=1.0):
+    # Parameter init disesuaikan dengan kebutuhan ByteTrack
+    def __init__(self, model_path, video_path, csv_output_path, 
+                 track_thresh=0.25, track_buffer=30, match_thresh=0.8, 
+                 skip_frame=5, track_time_window=1.0):
+        
         self.model = YOLO(model_path)
         self.cap = cv2.VideoCapture(video_path)
-        self.tracker = Sort(max_age=max_age, min_hits=min_hits,
-                            iou_threshold=iou_threshold)
+        
+        # Inisialisasi ByteTracker
+        self.tracker = ByteTracker(
+            track_thresh=track_thresh,
+            track_buffer=track_buffer,
+            match_thresh=match_thresh,
+            frame_rate=30
+        )
+        
         self.skip_frame = skip_frame
         self.track_time_window = track_time_window
         self.object_tracks = {}
@@ -36,7 +47,7 @@ class VideoProcessor:
 
             frame, self.last_log_time = self._process_frame(frame)
 
-            cv2.imshow("Fish Movement Tracker (SORT)", frame)
+            cv2.imshow("Fish Movement Tracker (ByteTrack)", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 print("🛑 Interrupted by user.")
                 break
@@ -51,20 +62,13 @@ class VideoProcessor:
 
     def _process_frame(self, frame):
         now = time.time()
+        # Mendapatkan hasil deteksi dari YOLO
         results = self.model(frame, device="cpu", verbose=False, imgsz=480)[0]
 
-        detections = []
-        for box in results.boxes:
-            x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-            conf = float(box.conf[0])
-            detections.append([x1, y1, x2, y2, conf])
-
-        if len(detections) > 0:
-            detections_np = np.array(detections)
-        else:
-            detections_np = np.empty((0, 5))
-
-        tracked_objects = self.tracker.update(detections_np)
+        # --- PERUBAHAN UTAMA DI SINI ---
+        # Tidak perlu lagi loop manual "for box in results.boxes"
+        # Kita langsung kirim objek 'results' ke wrapper ByteTracker kita.
+        tracked_objects = self.tracker.update(results)
 
         for x1, y1, x2, y2, obj_id in tracked_objects:
             cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
