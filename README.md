@@ -1,6 +1,7 @@
 # Aqua Tilapia Detection and Tracking
 
-![Example Tracking](images/example_tracking.png)
+![Tilapia Bytetrack&#39;](https://github.com/user-attachments/assets/266edab3-1e16-40e5-b6a6-04010eeede8e)
+
 
 This project provides a high-performance solution for detecting and tracking Tilapia fish in video streams using **YOLO11** and **ByteTrack**. Unlike standard trackers, this system leverages **ByteTrack** to robustly handle occlusions (when fish cross each other) and utilizes **GPU acceleration** for real-time processing.
 
